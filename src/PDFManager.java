@@ -1,6 +1,7 @@
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.rendering.PDFRenderer;
 
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -36,6 +37,14 @@ public class PDFManager {
         return renderer.renderImage(page, scale);
     }
 
+    public BufferedImage[] renderPages(int dpi) throws IOException {
+        BufferedImage[] arr = new BufferedImage[pd.getNumberOfPages()];
+        for (int i = 0; i < pd.getNumberOfPages(); i++) {
+            arr[i] = renderPage(i, dpi);
+        }
+        return arr;
+    }
+
     public void close() throws IOException {
         pd.close();
     }
@@ -63,6 +72,17 @@ public class PDFManager {
         return prefix;
     }
 
+    public void deletePrefix(int numPages, IntConsumer f) throws IOException {
+        for (int i = 0; i < numPages; i++) {
+            f.accept(i);
+            deletePage(0);
+        }
+    }
+
+    public int getNumPages() {
+        return pd.getNumberOfPages();
+    }
+
     /**
      * Deletes the page at the given index
      * @param pageNumber the page number
@@ -70,6 +90,17 @@ public class PDFManager {
      */
     public void deletePage(int pageNumber) throws IOException {
         pd.removePage(pageNumber);
+    }
+
+    /**
+     * Utility method that saves the given PDDocument to the specified path
+     * @param pd the document
+     * @param path the filepath
+     * @throws IOException if an IO error occurs
+     */
+    public static void savePDF(PDDocument pd, File file) throws IOException {
+        pd.save(file);
+        pd.close();
     }
 
     /**
