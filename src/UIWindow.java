@@ -28,24 +28,38 @@ public class UIWindow {
     private PDFManager manager;
     private JFileChooser jfc;
 
-    public void importImages(BufferedImage[] bufferedImages) {
-        images = new ArrayList<BufferedImage>();
+    public void importImages(int dpi, int height) throws IOException {
+        images = new ArrayList<>();
         labels = new ArrayList<>();
+        BufferedImage[] bufferedImages = manager.renderPages(dpi, (bi) -> addRender(bi, height));
         images.addAll(Arrays.asList(bufferedImages));
     }
 
-    public void createRenders(int height) {
-        JLabel l;
-        for (BufferedImage bi : images) {
-            int width = height * bi.getWidth() / bi.getHeight();
-            l = new JLabel(new ImageIcon(getScaledImage(bi, width, height)));
-            setMouseListener(l);
-            labels.add(l);
-            scrollPanel.add(l);
-        }
+    /*
+    public void importImages(BufferedImage[] bufferedImages) {
+        images = new ArrayList<>();
+        labels = new ArrayList<>();
+        images.addAll(Arrays.asList(bufferedImages));
+    }
+    */
+
+    private void addRender(BufferedImage bi, int height) {
+        int width = height * bi.getWidth() / bi.getHeight();
+        JLabel l = new JLabel(new ImageIcon(getScaledImage(bi, width, height)));
+        setMouseListener(l);
+        labels.add(l);
+        scrollPanel.add(l);
         scrollPanel.updateUI();
     }
 
+    /*
+    public void createRenders(int height) {
+        for (BufferedImage bi : images) {
+            addRender(bi, height);
+        }
+        scrollPanel.updateUI();
+    }
+    */
 
 
     private void setMouseListener(JLabel j) {
@@ -62,7 +76,6 @@ public class UIWindow {
 
             @Override
             public void mouseReleased(MouseEvent e) {
-                System.out.println("Pressed");
                 spinner1.setValue(1 + labels.indexOf(j));
             }
 
@@ -124,6 +137,9 @@ public class UIWindow {
                 if (userSelection == JFileChooser.APPROVE_OPTION) {
                     try {
                         File toSave = jfc.getSelectedFile();
+                        if (!toSave.getAbsolutePath().endsWith(".pdf")) {
+                            toSave = new File(toSave.getAbsolutePath() + ".pdf");
+                        }
                         PDFManager.savePDF(manager.makePrefixPDF(numToDelete, (i) -> {
                             scrollPanel.remove(0);
                             images.remove(0);

@@ -5,6 +5,7 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.function.Consumer;
 import java.util.function.IntConsumer;
 
 /**
@@ -37,12 +38,17 @@ public class PDFManager {
         return renderer.renderImage(page, scale);
     }
 
-    public BufferedImage[] renderPages(int dpi) throws IOException {
+    public BufferedImage[] renderPages(int dpi, Consumer<BufferedImage> f) throws IOException {
         BufferedImage[] arr = new BufferedImage[pd.getNumberOfPages()];
         for (int i = 0; i < pd.getNumberOfPages(); i++) {
             arr[i] = renderPage(i, dpi);
+            f.accept(arr[i]);
         }
         return arr;
+    }
+
+    public BufferedImage[] renderPages(int dpi) throws IOException {
+        return renderPages(dpi, (e) -> Math.random());
     }
 
     public void close() throws IOException {
@@ -93,9 +99,9 @@ public class PDFManager {
     }
 
     /**
-     * Utility method that saves the given PDDocument to the specified path
+     * Utility method that saves the given PDDocument to the specified File
      * @param pd the document
-     * @param path the filepath
+     * @param file the file at which to save
      * @throws IOException if an IO error occurs
      */
     public static void savePDF(PDDocument pd, File file) throws IOException {
